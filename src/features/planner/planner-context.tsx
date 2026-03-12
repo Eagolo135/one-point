@@ -64,7 +64,7 @@ type PointChatResult = {
 type PlannerContextValue = {
   tasks: Task[];
   events: PlannerEvent[];
-  addTask: (input: { title: string; type: TaskType; priority: TaskPriority; estimatedMinutes: number }) => Task;
+  addTask: (input: { title: string; type: TaskType; priority: TaskPriority; estimatedMinutes: number; startIso?: string; endIso?: string }) => Task;
   updateTask: (id: string, input: { title: string; type: TaskType; priority: TaskPriority; estimatedMinutes: number }) => Task | null;
   deleteTask: (id: string) => boolean;
   moveEvent: (eventId: string, startIso: string, endIso: string) => PlannerEvent | null;
@@ -263,10 +263,15 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
     priority: TaskPriority;
     estimatedMinutes: number;
     startIso?: string;
+    endIso?: string;
   }) {
     const fallback = pickBestSlot(input.estimatedMinutes, input.priority);
     const chosenStart = input.startIso ?? fallback?.startIso ?? addMinutes(new Date().toISOString(), 20);
-    const chosenEnd = addMinutes(chosenStart, input.estimatedMinutes);
+    const chosenEnd = input.endIso ?? addMinutes(chosenStart, input.estimatedMinutes);
+    const chosenEstimatedMinutes = Math.max(
+      5,
+      Math.round((new Date(chosenEnd).getTime() - new Date(chosenStart).getTime()) / 60000),
+    );
 
     const task: Task = {
       id: `task-${Date.now()}`,
@@ -274,7 +279,7 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
       type: input.type,
       priority: input.priority,
       status: "not-started",
-      estimatedMinutes: input.estimatedMinutes,
+      estimatedMinutes: chosenEstimatedMinutes,
     };
 
     setTasks((prev) => [task, ...prev]);
@@ -415,7 +420,7 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
     return prioritized.length;
   }
 
-  function addTask(input: { title: string; type: TaskType; priority: TaskPriority; estimatedMinutes: number }) {
+  function addTask(input: { title: string; type: TaskType; priority: TaskPriority; estimatedMinutes: number; startIso?: string; endIso?: string }) {
     return tool_create_task(input).task;
   }
 

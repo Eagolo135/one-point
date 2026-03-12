@@ -13,6 +13,8 @@ type TaskForm = {
   type: TaskType;
   priority: TaskPriority;
   estimatedMinutes: number;
+  startTime: string;
+  endTime: string;
 };
 
 const TASK_TYPES: TaskType[] = [
@@ -31,13 +33,23 @@ const INITIAL_FORM: TaskForm = {
   type: "flexible",
   priority: "important",
   estimatedMinutes: 45,
+  startTime: "",
+  endTime: "",
 };
+
+function timeToIsoToday(time: string) {
+  const [hour, minute] = time.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+}
 
 export function TasksClient() {
   const { tasks, addTask, updateTask, events } = usePlanner();
   const [form, setForm] = useState<TaskForm>(INITIAL_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<"all" | TaskType>("all");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const visibleTasks = useMemo(
     () => tasks.filter((task) => (filterType === "all" ? true : task.type === filterType)),
@@ -47,12 +59,16 @@ export function TasksClient() {
   function resetForm() {
     setForm(INITIAL_FORM);
     setEditingId(null);
+    setFormError(null);
   }
 
   async function submitTask() {
     if (!form.title.trim()) {
+      setFormError("Task title is required.");
       return;
     }
+
+    setFormError(null);
 
     if (editingId) {
       updateTask(editingId, {
@@ -66,11 +82,27 @@ export function TasksClient() {
       return;
     }
 
+    if (!form.startTime || !form.endTime) {
+      setFormError("Start time and end time are required.");
+      return;
+    }
+
+    const startIso = timeToIsoToday(form.startTime);
+    const endIso = timeToIsoToday(form.endTime);
+    const estimatedMinutes = Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000);
+
+    if (estimatedMinutes <= 0) {
+      setFormError("End time must be later than start time.");
+      return;
+    }
+
     addTask({
       title: form.title,
       type: form.type,
       priority: form.priority,
-      estimatedMinutes: form.estimatedMinutes,
+      estimatedMinutes,
+      startIso,
+      endIso,
     });
 
     resetForm();
@@ -83,7 +115,10 @@ export function TasksClient() {
       type: task.type,
       priority: task.priority,
       estimatedMinutes: task.estimatedMinutes,
+      startTime: "",
+      endTime: "",
     });
+    setFormError(null);
   }
 
   return (
@@ -158,7 +193,31 @@ export function TasksClient() {
               className="mt-1 w-full rounded-md border border-surface-border bg-surface px-2 py-1.5"
             />
           </div>
+
+          <div>
+            <label htmlFor="task-start" className="text-zinc-300">From (start time)</label>
+            <input
+              id="task-start"
+              type="time"
+              value={form.startTime}
+              onChange={(event) => setForm((prev) => ({ ...prev, startTime: event.target.value }))}
+              className="mt-1 w-full rounded-md border border-surface-border bg-surface px-2 py-1.5"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="task-end" className="text-zinc-300">To (end time)</label>
+            <input
+              id="task-end"
+              type="time"
+              value={form.endTime}
+              onChange={(event) => setForm((prev) => ({ ...prev, endTime: event.target.value }))}
+              className="mt-1 w-full rounded-md border border-surface-border bg-surface px-2 py-1.5"
+            />
+          </div>
         </div>
+
+        {formError ? <p className="mt-3 text-xs text-red-300">{formError}</p> : null}
 
         <div className="mt-4 flex gap-2">
           <button onClick={() => void submitTask()} className="rounded-md border border-gold bg-gold/15 px-3 py-2 text-sm text-gold-strong">
