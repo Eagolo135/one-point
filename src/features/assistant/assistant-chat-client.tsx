@@ -117,7 +117,10 @@ export function AssistantChatClient() {
             <p className="text-xs uppercase tracking-[0.2em] text-gold">point-chat.ai</p>
             <h1 className="mt-1 text-xl font-semibold md:text-2xl">Companion Planner</h1>
           </div>
-          <PointChatAvatar size={56} />
+          <div className="text-center">
+            <PointChatAvatar size={56} />
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-strong">Lock In Twin!!!</p>
+          </div>
         </div>
       </div>
 
