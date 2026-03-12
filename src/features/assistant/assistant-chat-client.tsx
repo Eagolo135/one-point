@@ -129,7 +129,7 @@ export function AssistantChatClient() {
   }
 
   return (
-    <div className="flex min-h-[88vh] flex-col rounded-2xl border border-gold/25 bg-surface/85 shadow-[0_0_0_1px_rgba(200,162,77,0.14),0_28px_70px_rgba(0,0,0,0.55)]">
+    <div className="flex h-[80vh] min-h-[640px] flex-col rounded-2xl border border-gold/25 bg-surface/85 shadow-[0_0_0_1px_rgba(200,162,77,0.14),0_28px_70px_rgba(0,0,0,0.55)] md:h-[82vh]">
       <div className="border-b border-surface-border px-5 py-4 md:px-6 md:py-5">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -229,7 +229,7 @@ export function AssistantChatClient() {
         </div>
       ) : null}
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5 md:px-6 md:py-6">
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4 md:px-6 md:py-5">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
@@ -303,8 +303,8 @@ export function AssistantChatClient() {
         ) : null}
       </div>
 
-      <div className="border-t border-surface-border p-4 md:p-5">
-        <div className="mb-3">
+      <div className="border-t border-surface-border p-3.5 md:p-4">
+        <div className="mb-2.5">
           <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-zinc-400">Suggestions</p>
           <div className="flex flex-wrap gap-2">
             {QUICK_SUGGESTIONS.map((suggestion) => (
@@ -359,8 +359,8 @@ export function AssistantChatClient() {
               }
             }}
             placeholder="Tell me what to schedule or update..."
-            rows={3}
-            className="min-h-[84px] flex-1 resize-none rounded-xl border border-surface-border bg-background px-4 py-3 text-base"
+            rows={2}
+            className="min-h-[64px] flex-1 resize-none rounded-xl border border-surface-border bg-background px-4 py-2.5 text-base"
           />
           <button
             onClick={() => void submit()}
