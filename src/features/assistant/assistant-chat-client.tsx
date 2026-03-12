@@ -129,12 +129,12 @@ export function AssistantChatClient() {
   }
 
   return (
-    <div className="flex min-h-[80vh] flex-col rounded-xl border border-surface-border bg-surface/80 shadow-[0_0_0_1px_rgba(200,162,77,0.08),0_20px_60px_rgba(0,0,0,0.45)]">
-      <div className="border-b border-surface-border px-4 py-3">
+    <div className="flex min-h-[88vh] flex-col rounded-2xl border border-gold/25 bg-surface/85 shadow-[0_0_0_1px_rgba(200,162,77,0.14),0_28px_70px_rgba(0,0,0,0.55)]">
+      <div className="border-b border-surface-border px-5 py-4 md:px-6 md:py-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-gold">point-chat.ai</p>
-            <h1 className="mt-1 text-xl font-semibold md:text-2xl">Companion Planner</h1>
+            <h1 className="mt-1 text-2xl font-semibold md:text-3xl">Companion Planner</h1>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -229,11 +229,11 @@ export function AssistantChatClient() {
         </div>
       ) : null}
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-3 overflow-y-auto px-5 py-5 md:px-6 md:py-6">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className={`max-w-[88%] rounded-2xl px-4 py-3 text-sm md:max-w-[70%] ${
+              className={`max-w-[94%] rounded-2xl px-4 py-3.5 text-base md:max-w-[78%] ${
                 message.role === "user"
                   ? "border border-gold/50 bg-gold/15 text-zinc-100"
                   : "border border-surface-border bg-background text-zinc-200"
@@ -245,7 +245,7 @@ export function AssistantChatClient() {
         ))}
         {isSending ? (
           <div className="flex justify-start">
-            <div className="max-w-[88%] rounded-2xl border border-surface-border bg-background px-4 py-3 text-sm text-zinc-400 md:max-w-[70%]">
+            <div className="max-w-[94%] rounded-2xl border border-surface-border bg-background px-4 py-3.5 text-base text-zinc-400 md:max-w-[78%]">
               Thinking...
             </div>
           </div>
@@ -303,7 +303,7 @@ export function AssistantChatClient() {
         ) : null}
       </div>
 
-      <div className="border-t border-surface-border p-3">
+      <div className="border-t border-surface-border p-4 md:p-5">
         <div className="mb-3">
           <p className="mb-2 text-[11px] uppercase tracking-[0.14em] text-zinc-400">Suggestions</p>
           <div className="flex flex-wrap gap-2">
@@ -348,23 +348,24 @@ export function AssistantChatClient() {
           </div>
         ) : null}
 
-        <div className="flex gap-2">
-          <input
+        <div className="flex items-end gap-2">
+          <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 void submit();
               }
             }}
             placeholder="Tell me what to schedule or update..."
-            className="flex-1 rounded-lg border border-surface-border bg-background px-3 py-2 text-sm"
+            rows={3}
+            className="min-h-[84px] flex-1 resize-none rounded-xl border border-surface-border bg-background px-4 py-3 text-base"
           />
           <button
             onClick={() => void submit()}
             disabled={isSending}
-            className="rounded-lg border border-gold bg-gold/15 px-4 py-2 text-sm text-gold-strong disabled:opacity-60"
+            className="rounded-xl border border-gold bg-gold/15 px-5 py-3 text-base font-medium text-gold-strong disabled:opacity-60"
           >
             {isSending ? "Sending..." : "Send"}
           </button>
