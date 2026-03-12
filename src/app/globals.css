@@ -43,4 +43,22 @@ body {
   box-shadow:
     0 0 0 1px rgba(200, 162, 77, 0.08),
     0 18px 40px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.onpoint-card-interactive:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--gold) 42%, var(--surface-border) 58%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--gold) 24%, transparent 76%),
+    0 24px 46px rgba(0, 0, 0, 0.42);
+}
+
+.onpoint-focusable:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--gold) 85%, white 15%);
+  outline-offset: 2px;
 }

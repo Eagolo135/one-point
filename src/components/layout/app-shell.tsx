@@ -34,7 +34,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="onpoint-shell min-h-screen text-foreground">
-      <div className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 pb-8 pt-5 md:px-6">
+      <div className="mx-auto min-h-screen w-full max-w-6xl space-y-5 px-4 pb-8 pt-5 md:px-6">
         <section className="onpoint-card p-4 md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -47,7 +47,7 @@ export function AppShell({ children }: AppShellProps) {
                 signOut();
                 router.push("/auth/sign-in");
               }}
-              className="w-full rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-200 md:w-auto"
+              className="onpoint-focusable w-full rounded-md border border-surface-border bg-surface/70 px-3 py-2 text-sm text-zinc-200 transition hover:border-gold/55 hover:text-zinc-100 md:w-auto"
             >
               Log out
             </button>

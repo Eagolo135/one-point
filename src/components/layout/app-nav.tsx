@@ -22,10 +22,10 @@ export function AppNav({ items, mobile = false }: AppNavProps) {
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded-lg border px-3 py-2 text-sm transition ${mobile ? "min-h-[44px] px-2 py-2 text-center text-xs leading-tight" : ""} ${
+            className={`onpoint-focusable rounded-lg border px-3 py-2 text-sm font-medium tracking-wide transition ${mobile ? "min-h-[44px] px-2 py-2 text-center text-xs leading-tight" : ""} ${
               active
-                ? "border-gold bg-gold/15 text-gold-strong"
-                : "border-surface-border bg-surface/70 text-zinc-300 hover:border-gold/50 hover:text-zinc-100"
+                ? "border-gold bg-gold/15 text-gold-strong shadow-sm"
+                : "border-surface-border bg-surface/70 text-zinc-300 hover:-translate-y-px hover:border-gold/50 hover:text-zinc-100 hover:shadow-sm"
             }`}
           >
             {item.label}
