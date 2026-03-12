@@ -34,7 +34,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="onpoint-shell min-h-screen text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl gap-6 px-4 pb-24 pt-5 md:px-6 md:pb-8">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl gap-6 px-4 pb-8 pt-28 md:px-6 md:pb-8 md:pt-5">
         <aside className="onpoint-card hidden w-64 flex-col self-start p-4 md:flex">
           <div className="flex-1">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">On Point</p>
@@ -58,9 +58,12 @@ export function AppShell({ children }: AppShellProps) {
         <main className="flex-1">{children}</main>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-surface-border bg-background/95 px-3 py-3 backdrop-blur md:hidden">
-        <AppNav items={APP_NAV_ITEMS} mobile />
-      </div>
+      <header className="fixed inset-x-0 top-0 z-40 border-b border-surface-border bg-background/95 px-3 py-3 backdrop-blur md:hidden">
+        <p className="text-center text-[10px] uppercase tracking-[0.2em] text-gold">Command Center</p>
+        <div className="mt-2">
+          <AppNav items={APP_NAV_ITEMS} mobile />
+        </div>
+      </header>
     </div>
   );
 }
