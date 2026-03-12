@@ -34,36 +34,34 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="onpoint-shell min-h-screen text-foreground">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl gap-6 px-4 pb-8 pt-28 md:px-6 md:pb-8 md:pt-5">
-        <aside className="onpoint-card hidden w-64 flex-col self-start p-4 md:flex">
-          <div className="flex-1">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">On Point</p>
-            <h2 className="mt-1 text-xl font-semibold">Command Center</h2>
-            <p className="mt-1 text-xs text-zinc-300 break-all">{user.email}</p>
-            <div className="mt-5">
-              <AppNav items={APP_NAV_ITEMS} />
+      <div className="mx-auto min-h-screen w-full max-w-6xl space-y-4 px-4 pb-8 pt-5 md:px-6">
+        <section className="onpoint-card p-4 md:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-gold">On Point</p>
+              <h2 className="mt-1 text-xl font-semibold">Command Center</h2>
+              <p className="mt-1 text-xs text-zinc-300 break-all">{user.email}</p>
             </div>
+            <button
+              onClick={() => {
+                signOut();
+                router.push("/auth/sign-in");
+              }}
+              className="w-full rounded-md border border-surface-border px-3 py-2 text-sm text-zinc-200 md:w-auto"
+            >
+              Log out
+            </button>
           </div>
-          <button
-            onClick={() => {
-              signOut();
-              router.push("/auth/sign-in");
-            }}
-            className="mt-4 w-full rounded-md border border-surface-border px-2.5 py-2 text-sm text-zinc-200"
-          >
-            Log out
-          </button>
-        </aside>
 
-        <main className="flex-1">{children}</main>
-      </div>
+          <div className="mt-4">
+            <AppNav items={APP_NAV_ITEMS} mobile />
+          </div>
+        </section>
 
-      <header className="fixed inset-x-0 top-0 z-40 border-b border-surface-border bg-background/95 px-3 py-3 backdrop-blur md:hidden">
-        <p className="text-center text-[10px] uppercase tracking-[0.2em] text-gold">Command Center</p>
-        <div className="mt-2">
-          <AppNav items={APP_NAV_ITEMS} mobile />
+        <div className="pb-2">
+          <main>{children}</main>
         </div>
-      </header>
+      </div>
     </div>
   );
 }
