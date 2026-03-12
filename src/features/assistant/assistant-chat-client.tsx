@@ -28,12 +28,31 @@ const QUICK_SUGGESTIONS = [
 ];
 
 export function AssistantChatClient() {
-  const { runPointChat, pendingProposal, confirmPendingProposal, cancelPendingProposal } = usePlanner();
+  const { runPointChat, pendingProposal, confirmPendingProposal, cancelPendingProposal, tasks, events } = usePlanner();
   const idCounterRef = useRef(2);
   const [messages, setMessages] = useState<ChatMessage[]>(STARTER);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [researchReport, setResearchReport] = useState<ResearchReport | null>(null);
+  const [isOverviewOpen, setIsOverviewOpen] = useState(false);
+  const [dayOffset, setDayOffset] = useState(0);
+
+  const selectedDay = new Date();
+  selectedDay.setDate(selectedDay.getDate() + dayOffset);
+  selectedDay.setHours(0, 0, 0, 0);
+  const selectedDayEnd = new Date(selectedDay);
+  selectedDayEnd.setDate(selectedDayEnd.getDate() + 1);
+
+  const selectedEvents = events
+    .filter((event) => {
+      const start = new Date(event.startIso).getTime();
+      return start >= selectedDay.getTime() && start < selectedDayEnd.getTime();
+    })
+    .sort((a, b) => new Date(a.startIso).getTime() - new Date(b.startIso).getTime());
+
+  const selectedTaskIds = new Set(selectedEvents.map((event) => event.taskId).filter((value): value is string => Boolean(value)));
+  const selectedTasks = tasks.filter((task) => selectedTaskIds.has(task.id));
+  const completedCount = selectedTasks.filter((task) => task.status === "done").length;
 
   function nextMessageId(role: "u" | "a") {
     idCounterRef.current += 1;
@@ -117,12 +136,98 @@ export function AssistantChatClient() {
             <p className="text-xs uppercase tracking-[0.2em] text-gold">point-chat.ai</p>
             <h1 className="mt-1 text-xl font-semibold md:text-2xl">Companion Planner</h1>
           </div>
-          <div className="text-center">
-            <PointChatAvatar size={56} />
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-strong">Lock In Twin!!!</p>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsOverviewOpen(true)}
+              className="rounded-md border border-surface-border bg-surface/70 px-2.5 py-1.5 text-[11px] text-zinc-200 hover:border-gold/50"
+            >
+              Day overview
+            </button>
+            <div className="text-center">
+              <PointChatAvatar size={56} />
+              <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-strong">Lock In Twin!!!</p>
+            </div>
           </div>
         </div>
       </div>
+
+      {isOverviewOpen ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 md:items-center">
+          <div className="onpoint-card w-full max-w-2xl p-4 md:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-gold">Daily Overview</p>
+                <h2 className="mt-1 text-lg font-semibold">
+                  {selectedDay.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOverviewOpen(false)}
+                className="rounded-md border border-surface-border px-2 py-1 text-xs text-zinc-200"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDayOffset((prev) => prev - 1)}
+                className="rounded-md border border-surface-border px-2.5 py-1.5 text-xs"
+              >
+                Previous day
+              </button>
+              <button
+                type="button"
+                onClick={() => setDayOffset(0)}
+                className="rounded-md border border-surface-border px-2.5 py-1.5 text-xs"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => setDayOffset((prev) => prev + 1)}
+                className="rounded-md border border-surface-border px-2.5 py-1.5 text-xs"
+              >
+                Next day
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md border border-surface-border bg-surface/70 p-3">
+                <p className="text-xs uppercase tracking-wide text-gold">Scheduled blocks</p>
+                <p className="mt-1 text-lg font-semibold">{selectedEvents.length}</p>
+              </div>
+              <div className="rounded-md border border-surface-border bg-surface/70 p-3">
+                <p className="text-xs uppercase tracking-wide text-gold">Tracked tasks</p>
+                <p className="mt-1 text-lg font-semibold">{selectedTasks.length}</p>
+              </div>
+              <div className="rounded-md border border-surface-border bg-surface/70 p-3">
+                <p className="text-xs uppercase tracking-wide text-gold">Completed</p>
+                <p className="mt-1 text-lg font-semibold">{completedCount}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">
+              {selectedEvents.map((event) => (
+                <div key={event.id} className="rounded-md border border-surface-border bg-surface/65 p-3 text-sm">
+                  <p className="font-medium">{event.title}</p>
+                  <p className="mt-1 text-zinc-300">
+                    {new Date(event.startIso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - {new Date(event.endIso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              ))}
+              {!selectedEvents.length ? (
+                <div className="rounded-md border border-surface-border bg-surface/55 p-3 text-sm text-zinc-400">
+                  No scheduled blocks for this day.
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.map((message) => (

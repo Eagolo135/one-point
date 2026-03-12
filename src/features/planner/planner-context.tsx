@@ -61,6 +61,12 @@ type PointChatResult = {
   needsConfirmation: boolean;
 };
 
+type TaskCreationDraft = {
+  title: string;
+  requestedTime?: string;
+  priority: TaskPriority;
+};
+
 type PlannerContextValue = {
   tasks: Task[];
   events: PlannerEvent[];
@@ -119,6 +125,20 @@ function parseTimeToday(time: string): string {
   return date.toISOString();
 }
 
+function parseDurationMinutes(text: string): number | null {
+  const hourMatch = text.match(/(\d+(?:\.\d+)?)\s*(hour|hours|hr|hrs)/i);
+  if (hourMatch) {
+    return Math.max(15, Math.round(Number(hourMatch[1]) * 60));
+  }
+
+  const minuteMatch = text.match(/(\d+)\s*(min|mins|minute|minutes)/i);
+  if (minuteMatch) {
+    return Math.max(15, Number(minuteMatch[1]));
+  }
+
+  return null;
+}
+
 function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
   return new Date(aStart).getTime() < new Date(bEnd).getTime() && new Date(bStart).getTime() < new Date(aEnd).getTime();
 }
@@ -141,6 +161,7 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [events, setEvents] = useState<PlannerEvent[]>(createInitialEvents);
   const [pendingProposal, setPendingProposal] = useState<PlannerProposal | null>(null);
+  const [taskCreationDraft, setTaskCreationDraft] = useState<TaskCreationDraft | null>(null);
 
   function tool_get_schedule() {
     const { startIso, endIso } = dayBounds();
@@ -519,6 +540,7 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
     applyProposalOperations(pendingProposal.operations);
     const summary = pendingProposal.summary;
     setPendingProposal(null);
+    setTaskCreationDraft(null);
     return `Done. ${summary}`;
   }
 
@@ -551,6 +573,119 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
 
     const schedule = tool_get_schedule();
     const freeBlocks = tool_get_free_time_blocks(15);
+
+    if (taskCreationDraft) {
+      const duration = parseDurationMinutes(text);
+      if (!duration) {
+        return {
+          message: `Quick clarification so I can add "${taskCreationDraft.title}": how long should it be? (example: 45 min or 2 hours)` ,
+          warnings: [],
+          needsConfirmation: false,
+        };
+      }
+
+      const parsedTime = text.match(/(?:at|from)\s+(\d{1,2}:\d{2})/i)?.[1];
+      const requestedTime = parsedTime ?? taskCreationDraft.requestedTime;
+      const priority = taskCreationDraft.priority;
+      const title = taskCreationDraft.title;
+      setTaskCreationDraft(null);
+
+      if (requestedTime) {
+        const startIso = parseTimeToday(requestedTime);
+        const endIso = addMinutes(startIso, duration);
+        const conflict = schedule.find((item) => overlaps(item.startIso, item.endIso, startIso, endIso));
+
+        if (conflict) {
+          return {
+            message: `You already have "${conflict.title}" around ${requestedTime}. I can move that, pick a later opening, or reorganize your day. What should I do?`,
+            warnings,
+            needsConfirmation: false,
+          };
+        }
+
+        const addWarnings = assessWarnings(startIso, endIso, priority);
+        if (addWarnings.length) {
+          const proposal: PlannerProposal = {
+            id: `proposal-${Date.now()}`,
+            title: "Schedule new task",
+            summary: `Scheduled "${title}" at ${formatTimeRange(startIso, endIso)}.`,
+            warnings: addWarnings,
+            operations: [
+              {
+                kind: "create",
+                title,
+                minutes: duration,
+                priority,
+                type: "flexible",
+                startIso,
+                endIso,
+              },
+            ],
+          };
+          setPendingProposal(proposal);
+          return {
+            message: `I can place "${title}" at ${formatTimeRange(startIso, endIso)}, but ${addWarnings.join(" ")} Confirm and I’ll apply it.`,
+            warnings: addWarnings,
+            needsConfirmation: true,
+          };
+        }
+
+        const created = tool_create_task({
+          title,
+          estimatedMinutes: duration,
+          priority,
+          type: "flexible",
+          startIso,
+        });
+        return {
+          message: `Done — I scheduled "${title}" at ${formatTimeRange(created.startIso, created.endIso)}.`,
+          warnings: [],
+          needsConfirmation: false,
+        };
+      }
+
+      const slot = pickBestSlot(duration, priority);
+      if (!slot) {
+        const proposal: PlannerProposal = {
+          id: `proposal-${Date.now()}`,
+          title: "Reorganize to fit new task",
+          summary: `Reorganized your day and added "${title}".`,
+          warnings: ["Your current day is full, so this requires moving other blocks."],
+          operations: [
+            {
+              kind: "create",
+              title,
+              minutes: duration,
+              priority,
+              type: "splittable",
+              startIso: addMinutes(new Date().toISOString(), 30),
+              endIso: addMinutes(addMinutes(new Date().toISOString(), 30), duration),
+            },
+          ],
+        };
+
+        setPendingProposal(proposal);
+        return {
+          message:
+            "Your schedule is packed for the remaining day. I can still fit this by reorganizing lower-priority blocks. Confirm if you want me to proceed.",
+          warnings: proposal.warnings,
+          needsConfirmation: true,
+        };
+      }
+
+      const created = tool_create_task({
+        title,
+        estimatedMinutes: duration,
+        priority,
+        type: "flexible",
+        startIso: slot.startIso,
+      });
+      return {
+        message: `I looked across your whole day and scheduled "${title}" at ${formatTimeRange(created.startIso, created.endIso)}.`,
+        warnings: slot.warnings,
+        needsConfirmation: false,
+      };
+    }
 
     if (/(availability|free time|open slots|calendar availability|when am i free)/i.test(lower)) {
       const top = freeBlocks.slice(0, 4);
@@ -667,7 +802,21 @@ export function PlannerProvider({ children }: { children: React.ReactNode }) {
     if (addOrScheduleMatch) {
       const title = addOrScheduleMatch[1].trim();
       const requestedTime = addOrScheduleMatch[2];
-      const minutes = Math.max(15, Number(addOrScheduleMatch[3] ?? 60));
+      const minutesRaw = addOrScheduleMatch[3];
+      if (!minutesRaw) {
+        setTaskCreationDraft({
+          title,
+          requestedTime,
+          priority: /exam|deadline|urgent|critical/i.test(title) ? "critical" : "important",
+        });
+        return {
+          message: `Got it — I can add "${title}"${requestedTime ? ` at ${requestedTime}` : ""}. How long should this task be?`,
+          warnings,
+          needsConfirmation: false,
+        };
+      }
+
+      const minutes = Math.max(15, Number(minutesRaw));
       const priority: TaskPriority = /exam|deadline|urgent|critical/i.test(title) ? "critical" : "important";
 
       if (requestedTime) {
