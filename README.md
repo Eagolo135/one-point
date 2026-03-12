@@ -14,7 +14,7 @@ On Point is a mobile-friendly productivity web app for realistic schedule orches
 Current MVP includes:
 
 - Core architecture and folder structure
-- Firebase Authentication (Google sign-in)
+- Google Authentication (Google sign-in)
 - Home chat assistant page (ChatGPT-style)
 - Visual month calendar view
 - Tasks page with create/edit and shared planner state
@@ -80,9 +80,9 @@ Open http://localhost:3000.
 - Assistant command parsing is local (no external LLM backend yet)
 - No backend or DB yet
 
-## Firebase Google Auth + Calendar Scope
+## Google Auth + Calendar Scope
 
-This project uses Firebase Authentication with Google as the only sign-in method.
+This project uses Google Identity Services as the only sign-in method.
 
 During sign-in, it requests this additional Google OAuth scope:
 
@@ -98,27 +98,23 @@ This is required so On Point can call Google Calendar APIs for:
 
 Set these in local `.env.local` and in GitHub Actions secrets:
 
-- NEXT_PUBLIC_FIREBASE_API_KEY
-- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-- NEXT_PUBLIC_FIREBASE_PROJECT_ID
-- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-- NEXT_PUBLIC_FIREBASE_APP_ID
+- NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
-### Firebase Console setup checklist
+### Google Cloud setup checklist
 
-1. Enable Firebase Authentication → Google provider.
-2. Add authorized domains:
-	- localhost
-	- eagolo135.github.io
+1. Create OAuth 2.0 credentials in Google Cloud (Web application).
+2. Add authorized JavaScript origins:
+	- http://localhost:3000
+	- https://eagolo135.github.io
 3. In Google Cloud, ensure Google Calendar API is enabled for the same project.
+4. Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` from the OAuth client you created.
 
 ### App-specific user data separation
 
-On Point stores app-specific user data separately from Firebase identity.
+On Point stores app-specific user data separately from Google identity.
 
-- Identity/session: managed by Firebase Auth
-- App profile/preferences: local app storage key scoped by Firebase UID
+- Identity/session: managed by Google OAuth in-browser
+- App profile/preferences: local app storage key scoped by Google subject ID
 
 ### MVP token handling note (important)
 

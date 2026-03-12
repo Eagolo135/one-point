@@ -107,7 +107,7 @@ export default function CalendarPage() {
         subtitle="Visual monthly calendar with local planner items and Google Calendar events."
       />
 
-      <SectionCard title="Google Calendar access" description="Calendar API uses the Google access token from Firebase sign-in.">
+      <SectionCard title="Google Calendar access" description="Calendar API uses the Google access token from Google sign-in.">
         <div className="space-y-3 text-sm">
           <p className="text-zinc-200">
             Scope granted: {isCalendarScopeGranted ? "Yes" : "No"}
