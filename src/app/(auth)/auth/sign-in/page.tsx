@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/features/auth/auth-context";
+import { getMissingFirebasePublicEnvVars } from "@/lib/firebase/firebase-client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function SignInPage() {
 
   const [status, setStatus] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const missingVars = useMemo(() => getMissingFirebasePublicEnvVars(), []);
 
   useEffect(() => {
     if (isReady && user) {
@@ -58,6 +60,11 @@ export default function SignInPage() {
         {isCalendarScopeGranted ? <p className="mt-2 text-xs text-emerald-300">Calendar scope granted.</p> : null}
 
         <p className="mt-3 text-xs text-zinc-400">Firebase config variables must be set in environment for auth to work.</p>
+        {missingVars.length ? (
+          <p className="mt-2 text-xs text-amber-300">
+            Missing vars: {missingVars.join(", ")}
+          </p>
+        ) : null}
 
         <div className="mt-5 flex items-center justify-end text-sm">
           <Link href="/assistant" className="text-gold-strong underline-offset-4 hover:underline">

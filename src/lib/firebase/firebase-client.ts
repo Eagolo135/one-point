@@ -14,13 +14,27 @@ const firebaseConfig = {
 let cachedApp: FirebaseApp | null = null;
 let cachedAuth: Auth | null = null;
 
-function hasFirebaseConfig() {
-  return Boolean(
-    firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId &&
-      firebaseConfig.appId,
-  );
+export function getMissingFirebasePublicEnvVars(): string[] {
+  const missing: string[] = [];
+
+  if (!firebaseConfig.apiKey) {
+    missing.push("NEXT_PUBLIC_FIREBASE_API_KEY");
+  }
+  if (!firebaseConfig.authDomain) {
+    missing.push("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN");
+  }
+  if (!firebaseConfig.projectId) {
+    missing.push("NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  }
+  if (!firebaseConfig.appId) {
+    missing.push("NEXT_PUBLIC_FIREBASE_APP_ID");
+  }
+
+  return missing;
+}
+
+export function hasFirebaseConfig() {
+  return getMissingFirebasePublicEnvVars().length === 0;
 }
 
 export function getFirebaseAuthClient(): Auth {
@@ -29,7 +43,10 @@ export function getFirebaseAuthClient(): Auth {
   }
 
   if (!hasFirebaseConfig()) {
-    throw new Error("Missing Firebase public env vars. Check NEXT_PUBLIC_FIREBASE_* settings.");
+    const missing = getMissingFirebasePublicEnvVars();
+    throw new Error(
+      `Missing Firebase public env vars: ${missing.join(", ")}. Check deployment environment variables.`,
+    );
   }
 
   if (!cachedApp) {
